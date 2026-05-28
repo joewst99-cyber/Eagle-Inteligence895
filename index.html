@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eagle Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0b; --bg2: #111113; --bg3: #18181b;
+      --border: #27272a; --border2: #3f3f46;
+      --text: #fafafa; --text2: #a1a1aa; --text3: #52525b;
+      --green: #22c55e; --green-bg: rgba(34,197,94,0.1);
+      --red: #ef4444; --red-bg: rgba(239,68,68,0.1);
+      --amber: #f59e0b; --amber-bg: rgba(245,158,11,0.1);
+      --blue: #3b82f6; --blue-bg: rgba(59,130,246,0.1);
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    html, body, #root { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    button { font-family: var(--font-body); cursor: pointer; border: none; outline: none; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fade-in { animation: fadeIn 0.35s ease forwards; }
+    .spinning { display: inline-block; animation: spin 1s linear infinite; }
+
+    .app { display: flex; height: 100vh; overflow: hidden; background: var(--bg); }
+    .sidebar { width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; padding: 0 0 16px; }
+    .logo { display: flex; align-items: center; gap: 10px; padding: 20px 16px 16px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+    .logo-eagle { font-size: 22px; }
+    .logo-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; letter-spacing: 0.04em; }
+    .logo-sub { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; }
+    .nav { display: flex; flex-direction: column; gap: 2px; padding: 0 8px 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+    .nav-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; font-size: 13px; color: var(--text2); background: transparent; text-align: left; width: 100%; transition: all 0.15s; }
+    .nav-item:hover { background: var(--bg3); color: var(--text); }
+    .nav-item.active { background: var(--blue-bg); color: var(--blue); }
+    .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+    .sidebar-section { padding: 0 12px 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+    .sidebar-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 8px; }
+    .interval-group { display: flex; gap: 4px; }
+    .interval-btn { flex: 1; padding: 5px 0; border-radius: 5px; font-size: 11px; background: var(--bg3); color: var(--text2); border: 1px solid var(--border); transition: all 0.15s; }
+    .interval-btn:hover { border-color: var(--border2); color: var(--text); }
+    .interval-btn.active { background: var(--blue-bg); color: var(--blue); border-color: var(--blue); }
+    .countdown { font-size: 11px; color: var(--text2); margin-top: 6px; font-family: var(--font-mono); text-align: center; animation: pulse 2s infinite; }
+    .watch-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 8px; border-radius: 5px; width: 100%; background: transparent; text-align: left; transition: background 0.15s; margin-bottom: 1px; border: none; }
+    .watch-item:hover { background: var(--bg3); }
+    .watch-item.active { background: var(--bg3); border-left: 2px solid var(--blue) !important; padding-left: 6px; }
+    .watch-label { font-size: 12px; color: var(--text2); }
+    .watch-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+    .watch-price { font-size: 11px; color: var(--text); font-family: var(--font-mono); }
+    .watch-pct { font-size: 10px; font-family: var(--font-mono); }
+    .sidebar-footer { padding: 0 12px; margin-top: auto; }
+    .updated { font-size: 10px; color: var(--text3); }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 20px 12px; border-bottom: 1px solid var(--border); gap: 12px; flex-shrink: 0; }
+    .topbar-left { display: flex; flex-direction: column; gap: 6px; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .page-title { font-family: var(--font-head); font-size: 20px; font-weight: 600; }
+    .regime-badge { font-size: 11px; color: var(--text2); max-width: 500px; line-height: 1.4; }
+    .sentiment-badge { font-size: 11px; padding: 5px 12px; border-radius: 20px; border: 1px solid; max-width: 360px; line-height: 1.4; }
+    .refresh-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue); white-space: nowrap; transition: all 0.15s; }
+    .refresh-btn:hover:not(:disabled) { background: var(--blue); color: #fff; }
+    .refresh-btn:disabled { opacity: 0.5; cursor: default; }
+    .error-bar { margin: 10px 20px 0; padding: 10px 14px; background: var(--red-bg); border: 1px solid var(--red); border-radius: 6px; font-size: 13px; color: var(--red); flex-shrink: 0; }
+    .asset-strip { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; padding: 12px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .asset-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 8px; cursor: pointer; text-align: left; transition: all 0.15s; }
+    .asset-card:hover { border-color: var(--border2); background: var(--bg3); }
+    .asset-card.active { border-color: var(--blue); background: var(--blue-bg); }
+    .asset-label { font-size: 9px; color: var(--text2); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .asset-price { font-size: 12px; font-weight: 500; font-family: var(--font-mono); }
+    .asset-pct { font-size: 10px; font-family: var(--font-mono); }
+    .asset-bias { font-size: 9px; margin-top: 2px; font-weight: 600; letter-spacing: 0.04em; }
+    .content { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    .grid-3 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.4fr) minmax(0,1fr); gap: 12px; align-items: start; }
+    .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+    .panel-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 10px; font-weight: 600; }
+    .panel-text { font-size: 12px; color: var(--text2); line-height: 1.6; }
+    .empty-state { font-size: 12px; color: var(--text3); text-align: center; padding: 24px 0; }
+    .gauge-labels { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 6px; }
+    .gauge-track { height: 5px; background: var(--bg3); border-radius: 3px; position: relative; margin-bottom: 10px; }
+    .gauge-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 3px; opacity: 0.5; transition: width 0.6s ease; }
+    .gauge-dot { position: absolute; top: 50%; transform: translate(-50%,-50%); width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--bg); transition: left 0.6s ease; }
+    .card-list { display: flex; flex-direction: column; gap: 7px; }
+    .news-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+    .news-header { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 5px; align-items: flex-start; }
+    .news-title { font-size: 12px; font-weight: 500; line-height: 1.4; flex: 1; }
+    .news-summary { font-size: 11px; color: var(--text2); line-height: 1.55; margin-bottom: 6px; }
+    .news-footer { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+    .impact-badge { font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+    .asset-tag { font-size: 10px; color: var(--text2); background: var(--bg); padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); }
+    .cal-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .cal-time { font-size: 10px; font-family: var(--font-mono); color: var(--text2); }
+    .cal-event { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+    .dd-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .dd-name { font-family: var(--font-head); font-size: 17px; font-weight: 600; }
+    .bias-pill { font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.04em; }
+    .dd-price { font-family: var(--font-mono); font-size: 34px; font-weight: 500; letter-spacing: -0.02em; }
+    .dd-pct { font-family: var(--font-mono); font-size: 14px; margin-bottom: 14px; }
+    .key-level { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 9px 12px; }
+    .key-level-label { font-size: 10px; color: var(--text3); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .key-level-value { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--amber); }
+    .related-card { display: flex; justify-content: space-between; align-items: center; padding: 9px 11px; border-radius: 7px; background: var(--bg3); border: 1px solid var(--border); width: 100%; text-align: left; cursor: pointer; transition: all 0.15s; }
+    .related-card:hover { border-color: var(--border2); }
+    .related-label { font-size: 13px; }
+    .related-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .table-head { display: grid; grid-template-columns: 1.2fr 1.4fr 0.8fr 1fr 2fr; padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); font-weight: 600; }
+    .table-row { display: grid; grid-template-columns: 1.2fr 1.4fr 0.8fr 1fr 2fr; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; transition: background 0.12s; }
+    .table-row:last-child { border-bottom: none; }
+    .table-row:hover { background: var(--bg3); }
+    .table-name { font-size: 13px; font-weight: 500; }
+    .table-note { font-size: 11px; color: var(--text2); line-height: 1.4; }
+    .loading-bar { margin-top: 1rem; padding: 10px 14px; background: var(--blue-bg); border: 1px solid var(--blue); border-radius: 6px; font-size: 12px; color: var(--blue); text-align: center; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    const fmt = (n, d=2) => n != null ? Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}) : "—";
+    const pctColor  = p => p >= 0 ? "var(--green)" : "var(--red)";
+    const biasColor = b => b === "BULLISH" ? "var(--green)" : b === "BEARISH" ? "var(--red)" : "var(--text2)";
+    const biasBg    = b => b === "BULLISH" ? "var(--green-bg)" : b === "BEARISH" ? "var(--red-bg)" : "var(--bg3)";
+    const impactColor = i => i === "HIGH" ? "var(--red)" : i === "MEDIUM" ? "var(--amber)" : "var(--text2)";
+    const impactBg    = i => i === "HIGH" ? "var(--red-bg)" : i === "MEDIUM" ? "var(--amber-bg)" : "var(--bg3)";
+
+    const ASSETS = [
+      { key:"gold",   label:"XAU/USD", decimals:2, correlated:["dxy","sp500"] },
+      { key:"sp500",  label:"S&P 500", decimals:2, correlated:["nasdaq","us30"] },
+      { key:"nasdaq", label:"Nasdaq",  decimals:2, correlated:["sp500","us30"] },
+      { key:"us30",   label:"US30",    decimals:2, correlated:["sp500","nasdaq"] },
+      { key:"dxy",    label:"DXY",     decimals:3, correlated:["gold","eurusd"] },
+      { key:"eurusd", label:"EUR/USD", decimals:4, correlated:["dxy","gbpusd"] },
+      { key:"gbpusd", label:"GBP/USD", decimals:4, correlated:["eurusd","gbpjpy"] },
+      { key:"gbpjpy", label:"GBP/JPY", decimals:3, correlated:["gbpusd","usdjpy"] },
+      { key:"usdjpy", label:"USD/JPY", decimals:3, correlated:["dxy","gbpjpy"] },
+    ];
+
+    const INTERVALS = [{label:"Off",value:0},{label:"5m",value:5},{label:"10m",value:10},{label:"15m",value:15}];
+
+    const PROMPT = `Search for current live financial market data right now and return ONLY a raw JSON object — no markdown, no code fences, no preamble, just the JSON.
+{
+  "sentiment": "RISK-ON or RISK-OFF or NEUTRAL",
+  "sentimentScore": 0 to 100,
+  "sentimentReason": "one sentence explanation",
+  "regime": "one sentence describing current market regime",
+  "assets": {
+    "gold":   {"price":number,"changePercent":number,"bias":"BULLISH or BEARISH or NEUTRAL","note":"brief context","keyLevel":"key price level","correlation":"one sentence on correlation"},
+    "sp500":  {"price":number,"changePercent":number,"bias":"BULLISH or BEARISH or NEUTRAL","note":"brief context","keyLevel":"key level","correlation":"correlation note"},
+    "nasdaq": {"price":number,"changePercent":number,"bias":"BULLISH or BEARISH or NEUTRAL","note":"brief context","keyLevel":"key level","correlation":"correlation note"},
+    "us30":   {"price":number,"changePercent":number,"bias":"BULLISH or BEARISH or NEUTRAL","note":"brief context","keyLevel":"key level","correlation":"correlation note"},
+    "dxy":    {"price":number,"changePercent":number,"bias":"BULLISH or BEARISH or NEUTRAL","note":"brief context","keyLevel":"key level","correlation":"correlation note"},
+    "eurusd": {"price":number,"changePercent":number,"bias":"BULLISH or BEARISH or NEUTRAL","note":"brief context","keyLevel":"key level","correlation":"correlation note"},
+    "gbpusd": {"price":number,"changePercent":number,"bias":"BULLISH or BEARISH or NEUTRAL","note":"brief context","keyLevel":"key level","correlation":"correlation note"},
+    "gbpjpy": {"price":number,"changePercent":number,"bias":"BULLISH or BEARISH or NEUTRAL","note":"brief context","keyLevel":"key level","correlation":"correlation note"},
+    "usdjpy": {"price":number,"changePercent":number,"bias":"BULLISH or BEARISH or NEUTRAL","note":"brief context","keyLevel":"key level","correlation":"correlation note"}
+  },
+  "headlines": [
+    {"title":"headline","impact":"HIGH or MEDIUM or LOW","assets":["Gold","USD"],"direction":"BULLISH or BEARISH or MIXED","summary":"Two sentence AI analysis."}
+  ],
+  "calendar": [
+    {"time":"HH:MM UTC","event":"event name","currency":"USD","importance":"HIGH or MEDIUM","context":"One sentence on why this matters."}
+  ]
+}`;
+
+    function App() {
+      const [data, setData]         = useState(null);
+      const [loading, setLoading]   = useState(false);
+      const [error, setError]       = useState(null);
+      const [updated, setUpdated]   = useState(null);
+      const [selected, setSelected] = useState("gold");
+      const [view, setView]         = useState("overview");
+      const [interval, setIntervalVal] = useState(0);
+      const [countdown, setCountdown]  = useState(0);
+      const timerRef = useRef(null);
+      const countRef = useRef(null);
+
+      const refresh = useCallback(async () => {
+        setLoading(true); setError(null);
+        try {
+          const res = await fetch("https://api.anthropic.com/v1/messages", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({
+              model:"claude-sonnet-4-20250514", max_tokens:1500,
+              tools:[{type:"web_search_20250305",name:"web_search"}],
+              messages:[{role:"user",content:PROMPT}]
+            })
+          });
+          const result = await res.json();
+          const text = (result.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+          const match = text.match(/\{[\s\S]*\}/);
+          if (!match) throw new Error("Could not parse response — try refreshing");
+          setData(JSON.parse(match[0]));
+          setUpdated(new Date());
+        } catch(e) { setError(e.message); }
+        setLoading(false);
+      }, []);
+
+      useEffect(() => {
+        if (timerRef.current) clearInterval(timerRef.current);
+        if (countRef.current) clearInterval(countRef.current);
+        if (interval === 0) { setCountdown(0); return; }
+        setCountdown(interval * 60);
+        timerRef.current = setInterval(() => { refresh(); setCountdown(interval*60); }, interval*60*1000);
+        countRef.current = setInterval(() => setCountdown(c => Math.max(0,c-1)), 1000);
+        return () => { clearInterval(timerRef.current); clearInterval(countRef.current); };
+      }, [interval, refresh]);
+
+      const a = data?.assets;
+      const sel = a?.[selected];
+      const selMeta = ASSETS.find(x => x.key === selected);
+      const score = Math.min(100, Math.max(0, data?.sentimentScore ?? 50));
+      const sentColor = data?.sentiment==="RISK-ON" ? "var(--green)" : data?.sentiment==="RISK-OFF" ? "var(--red)" : "var(--text2)";
+      const sentBg    = data?.sentiment==="RISK-ON" ? "var(--green-bg)" : data?.sentiment==="RISK-OFF" ? "var(--red-bg)" : "var(--bg3)";
+
+      return (
+        <div className="app">
+          <aside className="sidebar">
+            <div className="logo">
+              <span className="logo-eagle">🦅</span>
+              <div>
+                <div className="logo-title">Eagle</div>
+                <div className="logo-sub">Intelligence</div>
+              </div>
+            </div>
+            <nav className="nav">
+              {[{id:"overview",icon:"◈",label:"Overview"},{id:"deepdive",icon:"◎",label:"Deep Dive"},{id:"bias",icon:"≡",label:"Bias Table"}].map(n => (
+                <button key={n.id} className={`nav-item ${view===n.id?"active":""}`} onClick={() => setView(n.id)}>
+                  <span className="nav-icon">{n.icon}</span><span>{n.label}</span>
+                </button>
+              ))}
+            </nav>
+            <div className="sidebar-section">
+              <div className="sidebar-label">Auto-refresh</div>
+              <div className="interval-group">
+                {INTERVALS.map(iv => (
+                  <button key={iv.value} className={`interval-btn ${interval===iv.value?"active":""}`} onClick={() => setIntervalVal(iv.value)}>{iv.label}</button>
+                ))}
+              </div>
+              {interval>0 && countdown>0 && <div className="countdown">Next in {Math.floor(countdown/60)}:{String(countdown%60).padStart(2,"0")}</div>}
+            </div>
+            <div className="sidebar-section">
+              <div className="sidebar-label">Watchlist</div>
+              {ASSETS.map(({key,label,decimals}) => (
+                <button key={key} className={`watch-item ${selected===key?"active":""}`} onClick={() => { setSelected(key); setView("deepdive"); }}>
+                  <span className="watch-label">{label}</span>
+                  <div className="watch-right">
+                    {a?.[key] ? <>
+                      <span className="watch-price">{fmt(a[key].price,decimals)}</span>
+                      <span className="watch-pct" style={{color:pctColor(a[key].changePercent)}}>{a[key].changePercent>=0?"+":""}{fmt(a[key].changePercent)}%</span>
+                    </> : <span style={{color:"var(--text3)"}}>—</span>}
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="sidebar-footer">
+              {updated && <div className="updated">Updated {updated.toLocaleTimeString()}</div>}
+            </div>
+          </aside>
+
+          <main className="main">
+            <div className="topbar">
+              <div className="topbar-left">
+                <h1 className="page-title">{view==="overview"?"Market Overview":view==="deepdive"?selMeta?.label:"Bias Table"}</h1>
+                {data?.regime && <div className="regime-badge">{data.regime}</div>}
+              </div>
+              <div className="topbar-right">
+                {data && <div className="sentiment-badge" style={{background:sentBg,color:sentColor,borderColor:sentColor+"40"}}>{data.sentiment} · {data.sentimentReason}</div>}
+                <button className="refresh-btn" onClick={refresh} disabled={loading}>
+                  {loading ? <span className="spinning">↻</span> : "↗"} {loading?"Loading...":"Refresh"}
+                </button>
+              </div>
+            </div>
+
+            {error && <div className="error-bar">{error}</div>}
+
+            <div className="asset-strip">
+              {ASSETS.map(({key,label,decimals}) => (
+                <button key={key} className={`asset-card ${selected===key?"active":""}`} onClick={() => { setSelected(key); setView("deepdive"); }}>
+                  <div className="asset-label">{label}</div>
+                  {a?.[key] ? <>
+                    <div className="asset-price">{fmt(a[key].price,decimals)}</div>
+                    <div className="asset-pct" style={{color:pctColor(a[key].changePercent)}}>{a[key].changePercent>=0?"+":""}{fmt(a[key].changePercent)}%</div>
+                    <div className="asset-bias" style={{color:biasColor(a[key].bias)}}>{a[key].bias}</div>
+                  </> : <div className="asset-label" style={{paddingTop:8}}>—</div>}
+                </button>
+              ))}
+            </div>
+
+            <div className="content">
+              {view==="overview" && (
+                <div className="grid-3 fade-in">
+                  <div className="panel">
+                    <div className="panel-title">Sentiment Gauge</div>
+                    {data ? <>
+                      <div className="gauge-labels"><span style={{color:"var(--red)"}}>Risk-Off</span><span style={{color:"var(--green)"}}>Risk-On</span></div>
+                      <div className="gauge-track">
+                        <div className="gauge-fill" style={{width:`${score}%`,background:data.sentiment==="RISK-ON"?"var(--green)":"var(--red)"}}/>
+                        <div className="gauge-dot" style={{left:`${score}%`,background:data.sentiment==="RISK-ON"?"var(--green)":"var(--red)"}}/>
+                      </div>
+                      <div className="panel-text">{data.sentimentReason}</div>
+                    </> : <div className="empty-state">Loads on refresh</div>}
+                  </div>
+                  <div className="panel">
+                    <div className="panel-title">AI News Intelligence</div>
+                    {data?.headlines?.length ? (
+                      <div className="card-list">
+                        {data.headlines.map((h,i) => (
+                          <div key={i} className="news-card">
+                            <div className="news-header">
+                              <span className="news-title">{h.title}</span>
+                              <span className="impact-badge" style={{background:impactBg(h.impact),color:impactColor(h.impact)}}>{h.impact}</span>
+                            </div>
+                            <div className="news-summary">{h.summary}</div>
+                            <div className="news-footer">
+                              <span style={{fontSize:11,fontWeight:600,color:h.direction==="BULLISH"?"var(--green)":h.direction==="BEARISH"?"var(--red)":"var(--text2)"}}>{h.direction}</span>
+                              {h.assets?.map(asset => <span key={asset} className="asset-tag">{asset}</span>)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <div className="empty-state">Press refresh to load live intelligence</div>}
+                  </div>
+                  <div className="panel">
+                    <div className="panel-title">Economic Calendar</div>
+                    {data?.calendar?.length ? (
+                      <div className="card-list">
+                        {data.calendar.map((ev,i) => (
+                          <div key={i} className="cal-card" style={{borderColor:ev.importance==="HIGH"?"var(--red)":"var(--border)"}}>
+                            <div className="cal-header">
+                              <span className="cal-time">{ev.time} UTC</span>
+                              <span className="impact-badge" style={{background:impactBg(ev.importance),color:impactColor(ev.importance)}}>{ev.currency} · {ev.importance}</span>
+                            </div>
+                            <div className="cal-event">{ev.event}</div>
+                            <div className="news-summary">{ev.context}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <div className="empty-state">Calendar loads on refresh</div>}
+                  </div>
+                </div>
+              )}
+
+              {view==="deepdive" && (
+                <div className="grid-3 fade-in">
+                  <div className="panel">
+                    <div className="panel-title">Asset Detail</div>
+                    {sel ? <>
+                      <div className="dd-header">
+                        <span className="dd-name">{selMeta?.label}</span>
+                        <span className="bias-pill" style={{background:biasBg(sel.bias),color:biasColor(sel.bias)}}>{sel.bias}</span>
+                      </div>
+                      <div className="dd-price">{fmt(sel.price,selMeta?.decimals)}</div>
+                      <div className="dd-pct" style={{color:pctColor(sel.changePercent)}}>{sel.changePercent>=0?"+":""}{fmt(sel.changePercent)}% today</div>
+                      {sel.keyLevel && <div className="key-level"><div className="key-level-label">Key Level</div><div className="key-level-value">{sel.keyLevel}</div></div>}
+                      {sel.note && <div className="panel-text" style={{marginTop:12}}>{sel.note}</div>}
+                    </> : <div className="empty-state">Select an asset or refresh</div>}
+                  </div>
+                  <div className="panel">
+                    <div className="panel-title">Correlation</div>
+                    {sel?.correlation && <div className="panel-text" style={{marginBottom:16}}>{sel.correlation}</div>}
+                    <div className="panel-title" style={{marginTop:8}}>Related Assets</div>
+                    <div className="card-list" style={{marginTop:8}}>
+                      {selMeta?.correlated.map(key => {
+                        const m = ASSETS.find(x=>x.key===key);
+                        const asset = a?.[key];
+                        return (
+                          <button key={key} className="related-card" onClick={() => setSelected(key)}>
+                            <span className="related-label">{m?.label}</span>
+                            {asset ? <div className="related-right">
+                              <span style={{fontFamily:"var(--font-mono)",fontSize:13}}>{fmt(asset.price,m?.decimals)}</span>
+                              <span style={{fontSize:11,color:pctColor(asset.changePercent)}}>{asset.changePercent>=0?"+":""}{fmt(asset.changePercent)}%</span>
+                            </div> : <span style={{color:"var(--text3)"}}>—</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="panel">
+                    <div className="panel-title">Relevant Headlines</div>
+                    {data?.headlines ? (
+                      <div className="card-list">
+                        {data.headlines.slice(0,3).map((h,i) => (
+                          <div key={i} className="news-card">
+                            <div className="news-header">
+                              <span className="news-title">{h.title}</span>
+                              <span className="impact-badge" style={{background:impactBg(h.impact),color:impactColor(h.impact)}}>{h.impact}</span>
+                            </div>
+                            <div className="news-summary">{h.summary}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <div className="empty-state">Refresh to load</div>}
+                  </div>
+                </div>
+              )}
+
+              {view==="bias" && (
+                <div className="panel fade-in" style={{padding:0,overflow:"hidden"}}>
+                  <div className="table-head"><span>Asset</span><span>Price</span><span>Change</span><span>Bias</span><span>Context</span></div>
+                  {ASSETS.map(({key,label,decimals},i) => {
+                    const asset = a?.[key];
+                    return (
+                      <div key={key} className="table-row" onClick={() => { setSelected(key); setView("deepdive"); }}>
+                        <span className="table-name">{label}</span>
+                        <span style={{fontFamily:"var(--font-mono)",fontSize:13}}>{asset?fmt(asset.price,decimals):"—"}</span>
+                        <span style={{fontFamily:"var(--font-mono)",fontSize:12,color:asset?pctColor(asset.changePercent):"var(--text3)"}}>{asset?`${asset.changePercent>=0?"+":""}${fmt(asset.changePercent)}%`:"—"}</span>
+                        <span>{asset?<span className="bias-pill" style={{background:biasBg(asset.bias),color:biasColor(asset.bias)}}>{asset.bias}</span>:"—"}</span>
+                        <span className="table-note">{asset?.note||"—"}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            {loading && <div className="loading-bar">Searching live markets · generating AI intelligence...</div>}
+          </main>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
