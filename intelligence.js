@@ -66,17 +66,3 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: err.message });
   }
 }
-Done
-Now just update the one file on GitHub — no need to re-upload everything:
-
-Go to your GitHub repo
-Click api/intelligence.js
-Click the pencil icon (Edit)
-Select all and replace with the new content above
-Click Commit changes
-Vercel will auto-redeploy. The warning disappears and the function runs correctly.
-
-Then test it by visiting your-site.vercel.app/api/intelligence — should return {"error":"Method not allowed"} which confirms it's alive. Then hit Refresh on the main site and data should load. 👀
-
-
-
