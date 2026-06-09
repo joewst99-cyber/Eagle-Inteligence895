@@ -188,17 +188,83 @@
       const countRef = useRef(null);
 
       const refresh = useCallback(async () => {
-        setLoading(true); setError(null);
-        try {
-          const res = await fetch("/api/intelligence", {
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body: JSON.stringify({
-              model:"claude-sonnet-4-20250514", max_tokens:1500,
-              tools:[{type:"web_search_20250305",name:"web_search"}],
-              messages:[{role:"user",content:PROMPT}]
-            })
-          });
+  setLoading(true);
+  setError(null);
+
+  // Simulate network delay (remove if you want instant)
+  await new Promise(resolve => setTimeout(resolve, 800));
+
+  // ---- MOCK DATA (realistic, fresh prices every call) ----
+  const now = new Date();
+  const randomWalk = (base, volatility) => base + (Math.random() - 0.5) * volatility;
+
+  // Base values (approx current market levels as of June 2026)
+  const bases = {
+    gold:    2350.50,   sp500:   5234.75, nasdaq: 18420.30,
+    us30:    39850.20,  dxy:     104.85,  eurusd: 1.0875,
+    gbpusd:  1.2670,    gbpjpy:  197.80,  usdjpy: 156.20
+  };
+  const decimals = {
+    gold:2, sp500:2, nasdaq:2, us30:2, dxy:3, eurusd:4, gbpusd:4, gbpjpy:3, usdjpy:3
+  };
+
+  const generatePrice = (key) => {
+    let price = bases[key];
+    // add random change ±0.5% for realism
+    if (key === 'nasdaq' || key === 'sp500') price *= (1 + (Math.random() - 0.5) * 0.008);
+    else if (key === 'gold') price += (Math.random() - 0.5) * 6;
+    else if (key === 'dxy') price += (Math.random() - 0.5) * 0.2;
+    else if (key.includes('usd') || key.includes('gbp')) price += (Math.random() - 0.5) * 0.003;
+    else price *= (1 + (Math.random() - 0.5) * 0.005);
+    return price;
+  };
+
+  const assets = {};
+  for (const {key} of ASSETS) {
+    const price = generatePrice(key);
+    const prev = bases[key]; // simplified: compare to base instead of true previous
+    const changePercent = ((price - prev) / prev) * 100;
+    let bias = "NEUTRAL";
+    if (changePercent > 0.25) bias = "BULLISH";
+    else if (changePercent < -0.25) bias = "BEARISH";
+    // override some for realism
+    if (key === 'sp500' && changePercent > 0.1) bias = "BULLISH";
+    if (key === 'dxy' && changePercent < -0.1) bias = "BEARISH";
+
+    assets[key] = {
+      price,
+      changePercent,
+      bias,
+      note: bias === "BULLISH" ? "Strong momentum on daily timeframe" : (bias === "BEARISH" ? "Sellers in control near resistance" : "Range‑bound awaiting catalyst"),
+      keyLevel: key === 'gold' ? "$2340 / $2380" : (key === 'sp500' ? "5200 support" : (key === 'dxy' ? "104.50 next" : "N/A")),
+      correlation: `Correlated with ${ASSETS.find(a => a.key !== key && Math.random() > 0.5)?.label || 'USD'}`
+    };
+  }
+
+  // Update bases for next refresh (optional – gives a trend)
+  Object.keys(bases).forEach(k => { bases[k] = assets[k].price; });
+
+  const mockData = {
+    sentiment: Math.random() > 0.6 ? "RISK-ON" : (Math.random() > 0.5 ? "NEUTRAL" : "RISK-OFF"),
+    sentimentScore: 45 + Math.random() * 40,
+    sentimentReason: "Mixed signals from Fed and earnings – markets are data‑dependent.",
+    regime: "Cautious optimism with rotation into defensive sectors.",
+    assets,
+    headlines: [
+      { title: "Fed holds rates, signals possible September cut", impact: "HIGH", assets: ["USD","Gold"], direction: "BULLISH", summary: "Powell's press conference sounded slightly dovish. Markets now price 60% chance of a cut in September." },
+      { title: "Nvidia announces new AI chip", impact: "HIGH", assets: ["Nasdaq","S&P 500"], direction: "BULLISH", summary: "The next‑gen Blackwell Ultra platform shows 4x performance leap. Pre‑market futures jump 1.2%." },
+      { title: "Oil rises on Middle East tensions", impact: "MEDIUM", assets: ["Gold","USD"], direction: "MIXED", summary: "Brent crude up 2% on supply concerns. Haven flows benefit gold but hurt risk assets." }
+    ],
+    calendar: [
+      { time: "14:30 UTC", event: "US Initial Jobless Claims", currency: "USD", importance: "HIGH", context: "Forecast 235k vs previous 229k. A higher reading could reinforce rate‑cut bets." },
+      { time: "10:00 UTC", event: "Eurozone CPI Flash Estimate", currency: "EUR", importance: "MEDIUM", context: "Expected to drop to 2.4% YoY, supporting ECB's easing bias." }
+    ]
+  };
+
+  setData(mockData);
+  setUpdated(new Date());
+  setLoading(false);
+}, []);
           const result = await res.json();
           const text = (result.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
           const match = text.match(/\{[\s\S]*\}/);
